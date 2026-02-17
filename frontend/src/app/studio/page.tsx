@@ -120,7 +120,7 @@ export default function StudioPage() {
     }
   };
 
-  // Step 2: Generate Images
+  // Step 2: Generate Images (Concurrent)
   const generateImages = async () => {
     const imgConfig = getConfig("image");
     if (!imgConfig.api_key) {
@@ -133,41 +133,54 @@ export default function StudioPage() {
     const updatedScenes = [...scenes];
     const [w, h] = resolution.split("x").map(Number);
     let failCount = 0;
+    let completed = 0;
+    let currentIndex = 0;
+    const CONCURRENCY = 3; // 并发控制
 
-    for (let i = 0; i < updatedScenes.length; i++) {
-      setProgress(`生成配图 ${i + 1}/${updatedScenes.length}...`);
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 120000); // 2 分钟超时
+    const worker = async () => {
+      while (currentIndex < updatedScenes.length) {
+        const i = currentIndex++;
+        setProgress(`生成配图 ${completed + 1}/${updatedScenes.length}...`);
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 120000);
 
-        const res = await fetch(`${API_BASE}/api/image/generate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            prompt: updatedScenes[i].image_prompt,
-            style_prefix: stylePrefix,
-            width: w,
-            height: h,
-            provider: imgConfig.provider || "dall-e",
-            api_key: imgConfig.api_key,
-            base_url: imgConfig.base_url || "",
-            model: imgConfig.model || "",
-          }),
-        });
-        clearTimeout(timeout);
-        const data = await res.json();
-        if (res.ok) {
-          updatedScenes[i].image_url = data.image_url;
-        } else {
+          const res = await fetch(`${API_BASE}/api/image/generate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+              prompt: updatedScenes[i].image_prompt,
+              style_prefix: stylePrefix,
+              width: w,
+              height: h,
+              provider: imgConfig.provider || "dall-e",
+              api_key: imgConfig.api_key,
+              base_url: imgConfig.base_url || "",
+              model: imgConfig.model || "",
+            }),
+          });
+          clearTimeout(timeout);
+          const data = await res.json();
+          if (res.ok) {
+            updatedScenes[i].image_url = data.image_url;
+            // 实时更新UI（可选，为了更好的交互体验）
+            setScenes([...updatedScenes]);
+          } else {
+            failCount++;
+            console.error(`图片 ${i + 1} 生成失败:`, data.detail || data);
+          }
+        } catch (e: any) {
           failCount++;
-          console.error(`图片 ${i + 1} 生成失败:`, data.detail || data);
+          console.error(`图片 ${i + 1} 生成失败:`, e);
+        } finally {
+          completed++;
+          setProgress(`生成配图 ${completed}/${updatedScenes.length}...`);
         }
-      } catch (e: any) {
-        failCount++;
-        console.error(`图片 ${i + 1} 生成失败:`, e);
       }
-    }
+    };
+
+    await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
 
     setScenes(updatedScenes);
     if (failCount > 0) {
@@ -178,51 +191,63 @@ export default function StudioPage() {
     setProgress("");
   };
 
-  // Step 3: Generate Audio
+  // Step 3: Generate Audio (Concurrent)
   const generateAudio = async () => {
     setLoading(true);
     const updatedScenes = [...scenes];
     let failCount = 0;
+    let completed = 0;
+    let currentIndex = 0;
+    const CONCURRENCY = 3;
 
-    for (let i = 0; i < updatedScenes.length; i++) {
-      setProgress(`合成语音 ${i + 1}/${updatedScenes.length}...`);
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 60000); // 1 分钟超时
+    const worker = async () => {
+      while (currentIndex < updatedScenes.length) {
+        const i = currentIndex++;
+        setProgress(`合成语音 ${completed + 1}/${updatedScenes.length}...`);
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 60000);
 
-        const ttsConfig = getConfig("tts");
-        const res = await fetch(`${API_BASE}/api/voice/synthesize`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            text: updatedScenes[i].narration,
-            voice,
-            rate,
-            provider: ttsConfig.provider || ttsProvider,
-            api_key: ttsConfig.api_key || "",
-          }),
-        });
-        clearTimeout(timeout);
-        const data = await res.json();
-        if (res.ok) {
-          updatedScenes[i].audio_url = data.local_path;
-          updatedScenes[i].duration = data.duration;
-        } else {
+          const ttsConfig = getConfig("tts");
+          const res = await fetch(`${API_BASE}/api/voice/synthesize`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+              text: updatedScenes[i].narration,
+              voice,
+              rate,
+              provider: ttsConfig.provider || ttsProvider,
+              api_key: ttsConfig.api_key || "",
+            }),
+          });
+          clearTimeout(timeout);
+          const data = await res.json();
+          if (res.ok) {
+            updatedScenes[i].audio_url = data.local_path;
+            updatedScenes[i].duration = data.duration;
+             // 实时更新UI
+            setScenes([...updatedScenes]);
+          } else {
+            failCount++;
+            console.error(`语音 ${i + 1} 合成失败:`, data.detail || data);
+          }
+        } catch (e: any) {
           failCount++;
-          console.error(`语音 ${i + 1} 合成失败:`, data.detail || data);
+          console.error(`语音 ${i + 1} 合成失败:`, e);
+        } finally {
+          completed++;
+          setProgress(`合成语音 ${completed}/${updatedScenes.length}...`);
         }
-      } catch (e: any) {
-        failCount++;
-        console.error(`语音 ${i + 1} 合成失败:`, e);
       }
-    }
+    };
+
+    await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
 
     setScenes(updatedScenes);
     if (failCount > 0) {
       alert(`${failCount} 条语音合成失败，请检查配置或稍后重试`);
     }
-    setStep(4);
     setStep(4);
     setLoading(false);
     setProgress("");

@@ -30,7 +30,7 @@ async def generate(req: ImageRequest):
     if not req.api_key:
         raise HTTPException(400, "请先配置图像生成 API Key")
 
-    full_prompt = f"{req.style_prefix} {req.prompt}".strip() if req.style_prefix else req.prompt
+    full_prompt = f"Unified Style: {req.style_prefix}\nScene Content: {req.prompt}".strip() if req.style_prefix else req.prompt
 
     result = await generate_image(
         prompt=full_prompt,
