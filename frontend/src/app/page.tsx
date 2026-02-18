@@ -1,28 +1,29 @@
 "use client";
 import { useRouter } from "next/navigation";
+import Icon from "@/components/Icon";
 import styles from "./page.module.css";
 
 const FEATURES = [
   {
-    icon: "✍️",
+    iconName: "edit",
     title: "AI 智能文案",
     desc: "输入主题，AI 自动创作分镜脚本，故事逻辑连贯",
     gradient: "linear-gradient(135deg, #6c5ce7, #a29bfe)",
   },
   {
-    icon: "🎨",
+    iconName: "palette",
     title: "AI 生成配图",
     desc: "每个分镜自动生成精美 AI 插图，支持多种风格",
     gradient: "linear-gradient(135deg, #00cec9, #55efc4)",
   },
   {
-    icon: "🎤",
+    iconName: "microphone",
     title: "智能语音合成",
     desc: "多种音色可选，免费 Edge-TTS 或高品质 OpenAI TTS",
     gradient: "linear-gradient(135deg, #fd79a8, #e84393)",
   },
   {
-    icon: "🎬",
+    iconName: "film",
     title: "一键合成视频",
     desc: "自动添加字幕、BGM、转场，输出专业短视频",
     gradient: "linear-gradient(135deg, #e17055, #fdcb6e)",
@@ -30,10 +31,10 @@ const FEATURES = [
 ];
 
 const STEPS = [
-  { num: "01", title: "输入主题", desc: "一句话描述你的视频主题", icon: "💡" },
-  { num: "02", title: "AI 创作", desc: "自动生成文案、配图、语音", icon: "🤖" },
-  { num: "03", title: "个性定制", desc: "调整风格、音色、模板", icon: "🎨" },
-  { num: "04", title: "导出视频", desc: "一键合成专业短视频", icon: "🎬" },
+  { num: "01", title: "输入主题", desc: "一句话描述你的视频主题", iconName: "lightbulb" },
+  { num: "02", title: "AI 创作", desc: "自动生成文案、配图、语音", iconName: "cpu" },
+  { num: "03", title: "个性定制", desc: "调整风格、音色、模板", iconName: "palette" },
+  { num: "04", title: "导出视频", desc: "一键合成专业短视频", iconName: "film" },
 ];
 
 export default function LandingPage() {
@@ -45,7 +46,7 @@ export default function LandingPage() {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <div className={styles.logo}>
-            <span className={styles.logoIcon}>🎬</span>
+            <span className={styles.logoIcon}><Icon name="film" size={24} /></span>
             <span className={styles.logoText}>AI Video</span>
           </div>
           <nav className={styles.nav}>
@@ -53,7 +54,7 @@ export default function LandingPage() {
             <a href="#workflow">流程</a>
             <a href="#copycat">竞品模仿</a>
             <button className="btn btn-secondary" onClick={() => router.push("/settings")}>
-              ⚙️ API 设置
+              <Icon name="settings" size={16} /> API 设置
             </button>
             <button className="btn btn-primary" onClick={() => router.push("/studio")}>
               开始创作
@@ -65,7 +66,7 @@ export default function LandingPage() {
               document.querySelector(`.${styles.nav}`)?.classList.toggle(styles.navOpen);
             }}
           >
-            ☰
+            <Icon name="menu" size={22} />
           </button>
         </div>
       </header>
@@ -76,7 +77,7 @@ export default function LandingPage() {
         <div className={styles.heroContent}>
           <div className={styles.heroBadge}>
             <span className={styles.heroBadgeDot} />
-            🚀 轻量化 · 零 ComfyUI · 云端驱动
+            <Icon name="rocket" size={14} /> 轻量化 · 零 ComfyUI · 云端驱动
           </div>
           <h1 className={styles.heroTitle}>
             <span className={styles.heroTitleGradient}>AI 全自动</span>
@@ -88,10 +89,10 @@ export default function LandingPage() {
           </p>
           <div className={styles.heroCTA}>
             <button className="btn btn-primary btn-lg" onClick={() => router.push("/studio")}>
-              ✨ 立即创作
+              <Icon name="sparkles" size={18} /> 立即创作
             </button>
             <button className="btn btn-secondary btn-lg" onClick={() => router.push("/copycat")}>
-              🔍 模仿竞品视频
+              <Icon name="search" size={18} /> 模仿竞品视频
             </button>
           </div>
           <div className={styles.heroStats}>
@@ -117,7 +118,7 @@ export default function LandingPage() {
       <section id="features" className={styles.features}>
         <div className="container">
           <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionIcon}>✨</span>
+            <span className={styles.sectionIcon}><Icon name="sparkles" size={22} /></span>
             核心功能
           </h2>
           <p className={styles.sectionSubtitle}>
@@ -127,7 +128,7 @@ export default function LandingPage() {
             {FEATURES.map((f, i) => (
               <div key={i} className={`${styles.featureCard} card`}>
                 <div className={styles.featureIcon} style={{ background: f.gradient }}>
-                  {f.icon}
+                  <Icon name={f.iconName} size={26} />
                 </div>
                 <h3>{f.title}</h3>
                 <p>{f.desc}</p>
@@ -141,7 +142,7 @@ export default function LandingPage() {
       <section id="workflow" className={styles.workflow}>
         <div className="container">
           <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionIcon}>📊</span>
+            <span className={styles.sectionIcon}><Icon name="bar-chart" size={22} /></span>
             创作流程
           </h2>
           <p className={styles.sectionSubtitle}>
@@ -151,7 +152,7 @@ export default function LandingPage() {
             {STEPS.map((s, i) => (
               <div key={i} className={styles.stepItem}>
                 <div className={styles.stepNum}>{s.num}</div>
-                <div className={styles.stepIcon}>{s.icon}</div>
+                <div className={styles.stepIcon}><Icon name={s.iconName} size={24} /></div>
                 <h3>{s.title}</h3>
                 <p>{s.desc}</p>
                 {i < STEPS.length - 1 && <div className={styles.stepConnector} />}
@@ -167,7 +168,7 @@ export default function LandingPage() {
           <div className={styles.copycatInner}>
             <div className={styles.copycatContent}>
               <div className="badge badge-primary" style={{ marginBottom: 12 }}>
-                🆕 独有功能
+                <Icon name="star" size={12} /> 独有功能
               </div>
               <h2>一键模仿竞品视频</h2>
               <p>
@@ -175,19 +176,19 @@ export default function LandingPage() {
                 生成完整的分析报告，一键应用到创作工作台即可做出同款视频。
               </p>
               <ul className={styles.copycatList}>
-                <li>🎯 AI 智能识别画面风格与色调</li>
-                <li>📝 自动还原分镜脚本</li>
-                <li>🎤 分析语音风格和 BGM 类型</li>
-                <li>⚡ 一键应用到工作台生成同款</li>
+                <li><Icon name="target" size={16} /> AI 智能识别画面风格与色调</li>
+                <li><Icon name="file-text" size={16} /> 自动还原分镜脚本</li>
+                <li><Icon name="microphone" size={16} /> 分析语音风格和 BGM 类型</li>
+                <li><Icon name="zap" size={16} /> 一键应用到工作台生成同款</li>
               </ul>
               <button className="btn btn-primary btn-lg" onClick={() => router.push("/copycat")}>
-                🔍 试试看
+                <Icon name="search" size={18} /> 试试看
               </button>
             </div>
             <div className={styles.copycatVisual}>
               <div className={styles.copycatCard}>
                 <div className={styles.copycatCardHeader}>
-                  <span>🔍 分析报告</span>
+                  <span><Icon name="search" size={16} /> 分析报告</span>
                   <span className="badge badge-success">完成</span>
                 </div>
                 <div className={styles.copycatCardBody}>
@@ -203,9 +204,9 @@ export default function LandingPage() {
                     <div className={styles.miniScene} style={{ width: "20%" }} />
                   </div>
                   <div className={styles.copycatMeta}>
-                    <span>📐 1080×1920</span>
-                    <span>⏱ 45s</span>
-                    <span>🎤 活力女声</span>
+                    <span><Icon name="ruler" size={14} /> 1080×1920</span>
+                    <span><Icon name="clock" size={14} /> 45s</span>
+                    <span><Icon name="microphone" size={14} /> 活力女声</span>
                   </div>
                 </div>
               </div>
@@ -222,10 +223,10 @@ export default function LandingPage() {
             <p>配置好 API Key，即可免费生成你的第一个 AI 视频</p>
             <div className={styles.ctaButtons}>
               <button className="btn btn-primary btn-lg" onClick={() => router.push("/studio")}>
-                ✨ 开始创作
+                <Icon name="sparkles" size={18} /> 开始创作
               </button>
               <button className="btn btn-secondary btn-lg" onClick={() => router.push("/settings")}>
-                ⚙️ 配置 API
+                <Icon name="settings" size={18} /> 配置 API
               </button>
             </div>
           </div>
@@ -237,7 +238,7 @@ export default function LandingPage() {
         <div className="container">
           <div className={styles.footerInner}>
             <div className={styles.footerBrand}>
-              <span className={styles.logoIcon}>🎬</span>
+              <span className={styles.logoIcon}><Icon name="film" size={20} /></span>
               <span>AI Video Generator</span>
             </div>
             <p className={styles.footerCopy}>

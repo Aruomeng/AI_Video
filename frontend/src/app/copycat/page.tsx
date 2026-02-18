@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Icon from "@/components/Icon";
 import styles from "./copycat.module.css";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -87,9 +88,9 @@ export default function CopycatPage() {
       {/* Header */}
       <header className={styles.header}>
         <button className={styles.backBtn} onClick={() => router.push("/")}>
-          ← 返回首页
+          <Icon name="arrow-left" size={18} /> 返回首页
         </button>
-        <h1>🔍 一键模仿竞品视频</h1>
+        <h1><Icon name="search" size={24} /> 一键模仿竞品视频</h1>
         <div />
       </header>
 
@@ -106,16 +107,16 @@ export default function CopycatPage() {
               onChange={(e) => setUrl(e.target.value)}
             />
             <button className="btn btn-primary" onClick={analyzeVideo} disabled={loading || !url.trim()}>
-              {loading ? "分析中..." : "🔍 开始分析"}
+              {loading ? "分析中..." : <><Icon name="search" size={16} /> 开始分析</>}
             </button>
           </div>
           <div className={styles.platformTags}>
             <span>支持平台：</span>
-            <span className={styles.platformTag}>📺 B站</span>
-            <span className={styles.platformTag}>🎵 抖音</span>
-            <span className={styles.platformTag}>▶️ YouTube</span>
-            <span className={styles.platformTag}>📱 快手</span>
-            <span className={styles.platformTag}>🔗 直链</span>
+            <span className={styles.platformTag}><Icon name="monitor" size={14} /> B站</span>
+            <span className={styles.platformTag}><Icon name="music" size={14} /> 抖音</span>
+            <span className={styles.platformTag}><Icon name="play" size={14} /> YouTube</span>
+            <span className={styles.platformTag}><Icon name="smartphone" size={14} /> 快手</span>
+            <span className={styles.platformTag}><Icon name="link" size={14} /> 直链</span>
           </div>
         </div>
       </div>
@@ -127,10 +128,10 @@ export default function CopycatPage() {
             <div className={styles.spinner} />
             <h3>AI 正在分析视频...</h3>
             <div className={styles.loadingSteps}>
-              <div className={styles.loadingStep}>📥 下载视频</div>
-              <div className={styles.loadingStep}>🎞️ 提取关键帧</div>
-              <div className={styles.loadingStep}>🤖 AI 智能分析</div>
-              <div className={styles.loadingStep}>📊 生成报告</div>
+              <div className={styles.loadingStep}><Icon name="download" size={16} /> 下载视频</div>
+              <div className={styles.loadingStep}><Icon name="film" size={16} /> 提取关键帧</div>
+              <div className={styles.loadingStep}><Icon name="cpu" size={16} /> AI 智能分析</div>
+              <div className={styles.loadingStep}><Icon name="bar-chart" size={16} /> 生成报告</div>
             </div>
           </div>
         </div>
@@ -141,23 +142,23 @@ export default function CopycatPage() {
         <div className={styles.reportSection}>
           <div className={styles.reportHeader}>
             <div>
-              <h2>📊 分析报告</h2>
+              <h2><Icon name="bar-chart" size={22} /> 分析报告</h2>
               <p className={styles.reportTitle}>{report.title}</p>
             </div>
             <button className="btn btn-primary btn-lg" onClick={applyToStudio}>
-              ⚡ 应用到工作台
+              <Icon name="zap" size={18} /> 应用到工作台
             </button>
           </div>
 
           {/* Summary */}
           <div className={styles.reportCard}>
-            <h3>📝 内容概述</h3>
+            <h3><Icon name="file-text" size={18} /> 内容概述</h3>
             <p>{report.summary}</p>
           </div>
 
           {/* Style */}
           <div className={styles.reportCard}>
-            <h3>🎨 风格分析</h3>
+            <h3><Icon name="palette" size={18} /> 风格分析</h3>
             <div className={styles.styleGrid}>
               <div className={styles.styleItem}>
                 <span className={styles.styleLabel}>风格标签</span>
@@ -189,22 +190,22 @@ export default function CopycatPage() {
           {/* Recommendations */}
           <div className={styles.recGrid}>
             <div className={styles.recCard}>
-              <span className={styles.recIcon}>🎨</span>
+              <span className={styles.recIcon}><Icon name="palette" size={20} /></span>
               <span className={styles.recLabel}>推荐模板</span>
               <span className={styles.recValue}>{report.recommended_template}</span>
             </div>
             <div className={styles.recCard}>
-              <span className={styles.recIcon}>🎤</span>
+              <span className={styles.recIcon}><Icon name="microphone" size={20} /></span>
               <span className={styles.recLabel}>推荐音色</span>
               <span className={styles.recValue}>{report.recommended_voice}</span>
             </div>
             <div className={styles.recCard}>
-              <span className={styles.recIcon}>🎵</span>
+              <span className={styles.recIcon}><Icon name="music" size={20} /></span>
               <span className={styles.recLabel}>推荐BGM</span>
               <span className={styles.recValue}>{report.recommended_bgm}</span>
             </div>
             <div className={styles.recCard}>
-              <span className={styles.recIcon}>⏱</span>
+              <span className={styles.recIcon}><Icon name="clock" size={20} /></span>
               <span className={styles.recLabel}>总时长</span>
               <span className={styles.recValue}>{report.total_duration}s</span>
             </div>
@@ -212,7 +213,7 @@ export default function CopycatPage() {
 
           {/* Scenes */}
           <div className={styles.reportCard}>
-            <h3>📋 分镜还原 ({report.scenes.length} 个场景)</h3>
+            <h3><Icon name="layout" size={18} /> 分镜还原 ({report.scenes.length} 个场景)</h3>
             <div className={styles.sceneTimeline}>
               {report.scenes.map((s, i) => (
                 <div key={i} className={styles.timelineItem}>
@@ -224,9 +225,9 @@ export default function CopycatPage() {
                       <span className="badge badge-primary">{s.duration}s</span>
                     </div>
                     <p className={styles.timelineDesc}>{s.description}</p>
-                    <p className={styles.timelineNarration}>💬 {s.narration}</p>
+                    <p className={styles.timelineNarration}><Icon name="message-circle" size={14} /> {s.narration}</p>
                     <details>
-                      <summary className={styles.promptToggle}>🎨 生图提示词</summary>
+                      <summary className={styles.promptToggle}><Icon name="palette" size={14} /> 生图提示词</summary>
                       <p className={styles.promptText}>{s.image_prompt}</p>
                     </details>
                   </div>
@@ -238,7 +239,7 @@ export default function CopycatPage() {
           {/* Bottom CTA */}
           <div className={styles.bottomCTA}>
             <button className="btn btn-primary btn-lg" onClick={applyToStudio}>
-              ⚡ 将分析结果应用到创作工作台，生成同款视频
+              <Icon name="zap" size={18} /> 将分析结果应用到创作工作台，生成同款视频
             </button>
           </div>
         </div>

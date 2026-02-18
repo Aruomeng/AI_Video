@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Icon from "@/components/Icon";
 import styles from "./settings.module.css";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -29,6 +30,12 @@ const DEFAULT_KEYS: Record<string, KeyConfig> = {
   llm: { provider: "openai", api_key: "", base_url: "", model: "" },
   image: { provider: "dall-e", api_key: "", base_url: "", model: "" },
   tts: { provider: "edge-tts", api_key: "", base_url: "", model: "" },
+};
+
+const SERVICE_ICONS: Record<string, string> = {
+  llm: "brain",
+  image: "palette",
+  tts: "microphone",
 };
 
 export default function SettingsPage() {
@@ -69,7 +76,7 @@ export default function SettingsPage() {
 
   const saveKeys = () => {
     localStorage.setItem("ai_video_keys", JSON.stringify(keys));
-    alert("✅ 配置已保存");
+    alert("配置已保存");
   };
 
   const testConnection = async (service: string) => {
@@ -117,7 +124,7 @@ export default function SettingsPage() {
 
   const renderServiceCard = (
     service: string,
-    icon: string,
+    iconName: string,
     label: string,
     providerList: ProviderInfo[] | undefined,
   ) => {
@@ -128,7 +135,7 @@ export default function SettingsPage() {
     return (
       <div className={styles.serviceCard}>
         <div className={styles.serviceHeader}>
-          <span className={styles.serviceIcon}>{icon}</span>
+          <span className={styles.serviceIcon}><Icon name={iconName} size={22} /></span>
           <h3>{label}</h3>
         </div>
 
@@ -187,11 +194,11 @@ export default function SettingsPage() {
           {/* Test Button */}
           <div className={styles.testBar}>
             <button className="btn btn-secondary" onClick={() => testConnection(service)} disabled={isTesting}>
-              {isTesting ? "测试中..." : "🔌 测试连接"}
+              {isTesting ? "测试中..." : <><Icon name="plug" size={16} /> 测试连接</>}
             </button>
             {result && (
               <div className={`${styles.testResult} ${result.success ? styles.testSuccess : styles.testFail}`}>
-                <span>{result.success ? "✅" : "❌"}</span>
+                <span>{result.success ? <Icon name="check-circle" size={16} /> : <Icon name="x-circle" size={16} />}</span>
                 <span>{result.message}</span>
                 {result.latency > 0 && <span className={styles.latency}> ({result.latency}ms)</span>}
               </div>
@@ -206,11 +213,11 @@ export default function SettingsPage() {
     <div className={styles.settings}>
       <header className={styles.header}>
         <button className={styles.backBtn} onClick={() => router.push("/")}>
-          ← 返回首页
+          <Icon name="arrow-left" size={18} /> 返回首页
         </button>
-        <h1>⚙️ API 密钥管理</h1>
+        <h1><Icon name="settings" size={24} /> API 密钥管理</h1>
         <button className="btn btn-primary" onClick={saveKeys}>
-          💾 保存配置
+          <Icon name="save" size={16} /> 保存配置
         </button>
       </header>
 
@@ -220,14 +227,14 @@ export default function SettingsPage() {
         </p>
 
         <div className={styles.serviceGrid}>
-          {renderServiceCard("llm", "🧠", "大语言模型 (LLM)", providers?.llm)}
-          {renderServiceCard("image", "🎨", "图像生成", providers?.image)}
-          {renderServiceCard("tts", "🎤", "语音合成 (TTS)", providers?.tts)}
+          {renderServiceCard("llm", "brain", "大语言模型 (LLM)", providers?.llm)}
+          {renderServiceCard("image", "palette", "图像生成", providers?.image)}
+          {renderServiceCard("tts", "microphone", "语音合成 (TTS)", providers?.tts)}
         </div>
 
         <div className={styles.bottomActions}>
           <button className="btn btn-primary btn-lg" onClick={saveKeys}>
-            💾 保存所有配置
+            <Icon name="save" size={18} /> 保存所有配置
           </button>
         </div>
       </div>

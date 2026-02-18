@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import Icon from "@/components/Icon";
 import styles from "./studio.module.css";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -14,11 +16,12 @@ interface Scene {
   duration: number;
 }
 
+const STEP_ICONS: Record<number, string> = { 1: "file-text", 2: "palette", 3: "microphone", 4: "film" };
 const STEPS = [
-  { id: 1, label: "内容创作", icon: "📝" },
-  { id: 2, label: "视觉风格", icon: "🎨" },
-  { id: 3, label: "语音配置", icon: "🎤" },
-  { id: 4, label: "预览合成", icon: "🎬" },
+  { id: 1, label: "内容创作" },
+  { id: 2, label: "视觉风格" },
+  { id: 3, label: "语音配置" },
+  { id: 4, label: "预览合成" },
 ];
 
 const STYLES = ["知识科普", "情感故事", "历史文化", "科学思辨", "个人成长", "产品介绍", "搞笑幽默", "新闻资讯"];
@@ -27,6 +30,7 @@ const DURATIONS: Record<string, string> = { short: "短 (30-60秒)", medium: "�
 
 export default function StudioPage() {
   const router = useRouter();
+  const { token } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState("");
@@ -135,7 +139,7 @@ export default function StudioPage() {
     let failCount = 0;
     let completed = 0;
     let currentIndex = 0;
-    const CONCURRENCY = 3; // 并发控制
+    const CONCURRENCY = 5; // 并发控制
 
     const worker = async () => {
       while (currentIndex < updatedScenes.length) {
@@ -310,6 +314,26 @@ export default function StudioPage() {
       const data = await res.json();
       if (res.ok) {
         setVideoUrl(`${API_BASE}${data.video_url}`);
+
+        // Save project to DB if authenticated
+        if (token) {
+          try {
+            await fetch(`${API_BASE}/api/video/save`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                title: title || topic || "未命名项目",
+                scenes: scenes,
+                video_url: data.video_url
+              })
+            });
+          } catch (e) {
+            console.error("Failed to save project:", e);
+          }
+        }
       } else {
         throw new Error(data.detail || "合成失败");
       }
@@ -332,11 +356,11 @@ export default function StudioPage() {
       {/* Header */}
       <header className={styles.studioHeader}>
         <button className={styles.backBtn} onClick={() => router.push("/")}>
-          ← 返回首页
+          <Icon name="arrow-left" size={18} /> 返回首页
         </button>
-        <h1>🎬 创作工作台</h1>
+        <h1><Icon name="film" size={24} /> 创作工作台</h1>
         <button className="btn btn-secondary" onClick={() => router.push("/settings")}>
-          ⚙️ API 设置
+          <Icon name="settings" size={16} /> API 设置
         </button>
       </header>
 
@@ -344,7 +368,7 @@ export default function StudioPage() {
       <div className={styles.stepIndicator}>
         {STEPS.map((s) => (
           <div key={s.id} className={`${styles.stepDot} ${step === s.id ? styles.stepActive : ""} ${step > s.id ? styles.stepDone : ""}`}>
-            <span className={styles.stepDotIcon}>{step > s.id ? "✓" : s.icon}</span>
+            <span className={styles.stepDotIcon}>{step > s.id ? <Icon name="check" size={16} /> : <Icon name={STEP_ICONS[s.id]} size={16} />}</span>
             <span className={styles.stepDotLabel}>{s.label}</span>
           </div>
         ))}
@@ -363,7 +387,7 @@ export default function StudioPage() {
         {/* Step 1: Content */}
         {step === 1 && (
           <div className={styles.stepPanel}>
-            <h2>📝 内容创作</h2>
+            <h2><Icon name="file-text" size={22} /> 内容创作</h2>
             <p className={styles.stepDesc}>输入一个主题，AI 帮你生成完整的视频脚本</p>
 
             <div className={styles.formGrid}>
@@ -380,7 +404,7 @@ export default function StudioPage() {
                       onClick={() => setStyleMode(m => m === "select" ? "custom" : "select")}
                       style={{ fontSize: "12px", background: "none", border: "none", color: "var(--color-primary)", cursor: "pointer", padding: 0 }}
                     >
-                      {styleMode === "select" ? "✏️ 自定义" : "📋 列表选择"}
+                      {styleMode === "select" ? <><Icon name="edit" size={12} /> 自定义</> : <><Icon name="list" size={12} /> 列表选择</>}
                     </button>
                   </div>
                   {styleMode === "select" ? (
@@ -418,7 +442,7 @@ export default function StudioPage() {
 
             <div className={styles.stepActions}>
               <button className="btn btn-primary btn-lg" onClick={generateScript} disabled={!topic.trim()}>
-                ✨ AI 生成脚本
+                <Icon name="sparkles" size={18} /> AI 生成脚本
               </button>
             </div>
           </div>
@@ -427,7 +451,7 @@ export default function StudioPage() {
         {/* Step 2: Visual */}
         {step === 2 && (
           <div className={styles.stepPanel}>
-            <h2>🎨 视觉风格</h2>
+            <h2><Icon name="palette" size={22} /> 视觉风格</h2>
             <p className={styles.stepDesc}>设置 AI 配图风格，为每个分镜生成精美插图</p>
 
             <div className={styles.formGrid}>
@@ -458,7 +482,7 @@ export default function StudioPage() {
 
             {/* Script Preview */}
             <div className={styles.scriptPreview}>
-              <h3>📜 脚本预览 - {title}</h3>
+              <h3><Icon name="scroll" size={18} /> 脚本预览 - {title}</h3>
               <div className={styles.sceneList}>
                 {scenes.map((s, i) => (
                   <div key={i} className={styles.sceneItem}>
@@ -466,7 +490,7 @@ export default function StudioPage() {
                     <div className={styles.sceneContent}>
                       <textarea className="input" value={s.narration} onChange={(e) => updateScene(i, "narration", e.target.value)} rows={2} />
                       <details>
-                        <summary className={styles.promptToggle}>🎨 图像提示词</summary>
+                        <summary className={styles.promptToggle}><Icon name="palette" size={14} /> 图像提示词</summary>
                         <textarea className="input" value={s.image_prompt} onChange={(e) => updateScene(i, "image_prompt", e.target.value)} rows={2} />
                       </details>
                     </div>
@@ -476,9 +500,9 @@ export default function StudioPage() {
             </div>
 
             <div className={styles.stepActions}>
-              <button className="btn btn-secondary" onClick={() => setStep(1)}>← 上一步</button>
+              <button className="btn btn-secondary" onClick={() => setStep(1)}><Icon name="arrow-left" size={16} /> 上一步</button>
               <button className="btn btn-primary btn-lg" onClick={generateImages}>
-                🎨 生成配图
+                <Icon name="palette" size={18} /> 生成配图
               </button>
             </div>
           </div>
@@ -487,7 +511,7 @@ export default function StudioPage() {
         {/* Step 3: Voice */}
         {step === 3 && (
           <div className={styles.stepPanel}>
-            <h2>🎤 语音配置</h2>
+            <h2><Icon name="microphone" size={22} /> 语音配置</h2>
             <p className={styles.stepDesc}>选择语音音色和背景音乐</p>
 
             <div className={styles.formGrid}>
@@ -523,7 +547,7 @@ export default function StudioPage() {
                       title="试听当前音色"
                       style={{ padding: "10px 12px", border: "1px solid var(--color-border)" }}
                     >
-                      {previewing ? "⏳" : "🔊"}
+                      {previewing ? <Icon name="loader" size={18} /> : <Icon name="volume-2" size={18} />}
                     </button>
                   </div>
                 </div>
@@ -552,7 +576,7 @@ export default function StudioPage() {
 
             {/* Scenes with images */}
             <div className={styles.scriptPreview}>
-              <h3>📋 分镜预览</h3>
+              <h3><Icon name="layout" size={18} /> 分镜预览</h3>
               <div className={styles.sceneGrid}>
                 {scenes.map((s, i) => (
                   <div key={i} className={styles.sceneCard}>
@@ -571,9 +595,9 @@ export default function StudioPage() {
             </div>
 
             <div className={styles.stepActions}>
-              <button className="btn btn-secondary" onClick={() => setStep(2)}>← 上一步</button>
+              <button className="btn btn-secondary" onClick={() => setStep(2)}><Icon name="arrow-left" size={16} /> 上一步</button>
               <button className="btn btn-primary btn-lg" onClick={generateAudio}>
-                🎤 合成语音
+                <Icon name="microphone" size={18} /> 合成语音
               </button>
             </div>
           </div>
@@ -582,7 +606,7 @@ export default function StudioPage() {
         {/* Step 4: Preview & Compose */}
         {step === 4 && (
           <div className={styles.stepPanel}>
-            <h2>🎬 预览合成</h2>
+            <h2><Icon name="film" size={22} /> 预览合成</h2>
             <p className={styles.stepDesc}>检查各分镜效果，一键合成最终视频</p>
 
             <div className={styles.previewContainer}>
@@ -591,10 +615,10 @@ export default function StudioPage() {
                   <video controls src={videoUrl} className={styles.videoPlayer} />
                   <div className={styles.videoActions}>
                     <a href={videoUrl} download className="btn btn-primary btn-lg">
-                      ⬇️ 下载视频
+                      <Icon name="download" size={18} /> 下载视频
                     </a>
                     <button className="btn btn-secondary" onClick={() => { setVideoUrl(""); setStep(1); setScenes([]); setTopic(""); }}>
-                      🔄 创建新视频
+                      <Icon name="refresh-cw" size={16} /> 创建新视频
                     </button>
                   </div>
                 </div>
@@ -618,9 +642,9 @@ export default function StudioPage() {
                   </div>
 
                   <div className={styles.stepActions}>
-                    <button className="btn btn-secondary" onClick={() => setStep(3)}>← 上一步</button>
+                    <button className="btn btn-secondary" onClick={() => setStep(3)}><Icon name="arrow-left" size={16} /> 上一步</button>
                     <button className="btn btn-primary btn-lg" onClick={composeVideo}>
-                      🎬 合成视频
+                      <Icon name="film" size={18} /> 合成视频
                     </button>
                   </div>
                 </>

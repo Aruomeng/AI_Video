@@ -4,13 +4,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from config import CORS_ORIGINS, OUTPUT_DIR, BGM_DIR
-from routers import script, image, voice, video, apikeys, analyze
+from routers import script, image, voice, video, apikeys, analyze, auth
+from database import init_db
 
 app = FastAPI(
     title="AI Video Generator",
     description="轻量化 AI 视频生成引擎 API",
     version="0.1.0",
 )
+
+# Startup event
+@app.on_event("startup")
+async def on_startup():
+    await init_db()
 
 # CORS 中间件
 app.add_middleware(
@@ -32,6 +38,7 @@ app.include_router(voice.router, prefix="/api/voice", tags=["语音合成"])
 app.include_router(video.router, prefix="/api/video", tags=["视频合成"])
 app.include_router(apikeys.router, prefix="/api/keys", tags=["密钥管理"])
 app.include_router(analyze.router, prefix="/api/analyze", tags=["竞品分析"])
+app.include_router(auth.router, prefix="/api/auth", tags=["用户认证"])
 
 
 @app.get("/api/health")
