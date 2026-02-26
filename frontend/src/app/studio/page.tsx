@@ -124,7 +124,7 @@ export default function StudioPage() {
     }
   };
 
-  // Step 2: Generate Images (Concurrent)
+  // Step 2: Generate Images (Sequential + Auto-retry, 绝不报错)
   const generateImages = async () => {
     const imgConfig = getConfig("image");
     if (!imgConfig.api_key) {
@@ -137,17 +137,25 @@ export default function StudioPage() {
     const updatedScenes = [...scenes];
     const [w, h] = resolution.split("x").map(Number);
     let failCount = 0;
-    let completed = 0;
-    let currentIndex = 0;
-    const CONCURRENCY = 5; // 并发控制
 
-    const worker = async () => {
-      while (currentIndex < updatedScenes.length) {
-        const i = currentIndex++;
-        setProgress(`生成配图 ${completed + 1}/${updatedScenes.length}...`);
+    const MAX_RETRIES_PER_IMAGE = 3;
+    const RETRY_DELAY = 30000; // 30s
+
+    // 逐个生成，避免触发速率限制
+    for (let i = 0; i < updatedScenes.length; i++) {
+      let success = false;
+
+      for (let attempt = 0; attempt <= MAX_RETRIES_PER_IMAGE; attempt++) {
+        if (attempt > 0) {
+          setProgress(`配图 ${i + 1}/${updatedScenes.length} 等待重试 (${attempt}/${MAX_RETRIES_PER_IMAGE})...`);
+          await new Promise((r) => setTimeout(r, RETRY_DELAY));
+        }
+
+        setProgress(`生成配图 ${i + 1}/${updatedScenes.length}${attempt > 0 ? ` (重试 ${attempt})` : ""}...`);
+
         try {
           const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 120000);
+          const timeout = setTimeout(() => controller.abort(), 300000); // 5分钟超时
 
           const res = await fetch(`${API_BASE}/api/image/generate`, {
             method: "POST",
@@ -165,30 +173,33 @@ export default function StudioPage() {
             }),
           });
           clearTimeout(timeout);
-          const data = await res.json();
+
           if (res.ok) {
+            const data = await res.json();
             updatedScenes[i].image_url = data.image_url;
-            // 实时更新UI（可选，为了更好的交互体验）
             setScenes([...updatedScenes]);
+            success = true;
+            break; // 成功，跳到下一张图
           } else {
-            failCount++;
-            console.error(`图片 ${i + 1} 生成失败:`, data.detail || data);
+            const data = await res.json().catch(() => ({}));
+            console.warn(`配图 ${i + 1} 第 ${attempt + 1} 次尝试失败:`, data.detail || res.statusText);
           }
         } catch (e: any) {
-          failCount++;
-          console.error(`图片 ${i + 1} 生成失败:`, e);
-        } finally {
-          completed++;
-          setProgress(`生成配图 ${completed}/${updatedScenes.length}...`);
+          console.warn(`配图 ${i + 1} 第 ${attempt + 1} 次尝试出错:`, e.message);
         }
       }
-    };
 
-    await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
+      if (!success) {
+        failCount++;
+        console.error(`配图 ${i + 1} 最终生成失败，已跳过`);
+      }
+    }
 
     setScenes(updatedScenes);
     if (failCount > 0) {
-      alert(`${failCount} 张图片生成失败，请检查 API 配置或稍后重试`);
+      setProgress(`${failCount} 张配图未能生成，其余已完成`);
+      // 不 alert，2秒后自动清除提示
+      setTimeout(() => setProgress(""), 3000);
     }
     setStep(3);
     setLoading(false);
